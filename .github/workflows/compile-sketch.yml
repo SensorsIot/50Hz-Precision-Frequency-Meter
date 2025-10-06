@@ -1,0 +1,58 @@
+name: Compile ESP32 Sketch
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '50Hz-precisionFrequencyMeter/**'
+      - '.github/workflows/compile-sketch.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '50Hz-precisionFrequencyMeter/**'
+      - '.github/workflows/compile-sketch.yml'
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        board:
+          - fqbn: "esp32:esp32:esp32"
+            name: "ESP32 Dev Module"
+          - fqbn: "esp32:esp32:esp32s3"
+            name: "ESP32-S3 Dev Module"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: Install ESP32 platform
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.1
+
+      - name: Install required libraries
+        run: |
+          arduino-cli lib install "PubSubClient"
+
+      - name: Compile sketch for ${{ matrix.board.name }}
+        run: |
+          arduino-cli compile \
+            --fqbn ${{ matrix.board.fqbn }} \
+            --warnings all \
+            --verbose \
+            50Hz-precisionFrequencyMeter/50Hz-precisionFrequencyMeter.ino
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board.fqbn }}
+          path: |
+            50Hz-precisionFrequencyMeter/build/
+          retention-days: 30
