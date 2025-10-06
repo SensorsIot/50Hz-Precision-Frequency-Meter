@@ -45,12 +45,12 @@ jobs:
             --fqbn ${{ matrix.board.fqbn }} \
             --warnings all \
             --verbose \
+            --output-dir build \
             50Hz-precisionFrequencyMeter/50Hz-precisionFrequencyMeter.ino
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.board.fqbn }}
-          path: |
-            50Hz-precisionFrequencyMeter/build/
+          name: firmware-esp32
+          path: build/*.bin
           retention-days: 30
