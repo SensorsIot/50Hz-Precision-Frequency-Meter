@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd ESP32 50Hz precision frequency meter with Arduino implementation\n\n- Implement I/Q phase-slope algorithm for sub-millihertz frequency measurement\n- Add FreeRTOS multi-task architecture (I2S capture, DSP, MQTT publisher)\n- Support internal ADC (GPIO36) and ES8388 codec input modes\n- Include MQTT integration for real-time metrics publishing\n- Add web interface for status monitoring\n- Fix compatibility with ESP32 Arduino Core 3.x API changes\n- Add comprehensive README with setup instructions and technical details\n\nFeatures:\n- Resolution: ~1-2 mHz @ 1s, <0.2 mHz @ 10s\n- 4 kHz sampling with 10s analysis window\n- Quality metrics (R² correlation, uncertainty estimation)\n- Web dashboard and MQTT telemetry\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
