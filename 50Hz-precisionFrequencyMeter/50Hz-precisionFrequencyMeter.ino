@@ -13,23 +13,34 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <PubSubClient.h>
+#include <ArduinoOTA.h>
 #include "driver/i2s.h"
 #include "driver/adc.h"
 #include <math.h>
 #include <Wire.h>
+#include <credentials.h>
 
 // ========== CONFIG ==========
 #define INPUT_MODE_INTERNAL_ADC 1
 #define INPUT_MODE_ES8388       2
 #define INPUT_MODE              INPUT_MODE_INTERNAL_ADC   // switch to ES8388 when ready
 
-// WiFi & MQTT
-const char* WIFI_SSID     = "YOUR_SSID";
-const char* WIFI_PASS     = "YOUR_PASS";
-const char* MQTT_HOST     = "192.168.1.10";
+// WiFi & MQTT - now from credentials.h
+// Expects: mySSID, myPASSWORD, mqtt_server, and optionally mqtt_username, mqtt_password
+const char* WIFI_SSID     = mySSID;
+const char* WIFI_PASS     = myPASSWORD;
+const char* MQTT_HOST     = mqtt_server;
 const uint16_t MQTT_PORT  = 1883;
-const char* MQTT_USER     = nullptr;   // or "user"
-const char* MQTT_PASS     = nullptr;   // or "pass"
+#ifdef mqtt_username
+const char* MQTT_USER     = mqtt_username;
+#else
+const char* MQTT_USER     = nullptr;
+#endif
+#ifdef mqtt_password
+const char* MQTT_PASS     = mqtt_password;
+#else
+const char* MQTT_PASS     = nullptr;
+#endif
 String DEVICE_ID = String("esp32-50hz-") + String((uint32_t)ESP.getEfuseMac(), HEX);
 String TOPIC_BASE = "grid/50hzmeter/" + DEVICE_ID + "/";
 
@@ -370,6 +381,31 @@ void setup() {
 
   ensureWiFi();
 
+  // OTA Setup
+  ArduinoOTA.setHostname(DEVICE_ID.c_str());
+  ArduinoOTA.onStart([]() {
+    String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
+    Serial.println("Start OTA updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nOTA End");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  Serial.println("OTA Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
   http.on("/", httpRoot);
   http.begin();
 
@@ -393,7 +429,8 @@ void setup() {
 }
 
 void loop() {
-  // handle HTTP in main loop (non-blocking)
+  // handle HTTP and OTA in main loop (non-blocking)
+  ArduinoOTA.handle();
   http.handleClient();
   delay(2);
 }
