@@ -22,6 +22,8 @@ jobs:
         board:
           - fqbn: "esp32:esp32:esp32"
             name: "ESP32 Dev Module"
+          - fqbn: "esp32:esp32:esp32s3"
+            name: "ESP32-S3 Dev Module"
 
     steps:
       - name: Checkout repository
