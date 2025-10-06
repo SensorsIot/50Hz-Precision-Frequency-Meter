@@ -18,29 +18,41 @@
 #include "driver/adc.h"
 #include <math.h>
 #include <Wire.h>
-#include <credentials.h>
+
+// Try to include credentials.h if available
+#if __has_include(<credentials.h>)
+  #include <credentials.h>
+  #define HAS_CREDENTIALS
+#endif
 
 // ========== CONFIG ==========
 #define INPUT_MODE_INTERNAL_ADC 1
 #define INPUT_MODE_ES8388       2
 #define INPUT_MODE              INPUT_MODE_INTERNAL_ADC   // switch to ES8388 when ready
 
-// WiFi & MQTT - now from credentials.h
-// Expects: mySSID, myPASSWORD, mqtt_server, and optionally mqtt_username, mqtt_password
-const char* WIFI_SSID     = mySSID;
-const char* WIFI_PASS     = myPASSWORD;
-const char* MQTT_HOST     = mqtt_server;
+// WiFi & MQTT - from credentials.h if available, otherwise defaults
+#ifdef HAS_CREDENTIALS
+  const char* WIFI_SSID     = mySSID;
+  const char* WIFI_PASS     = myPASSWORD;
+  const char* MQTT_HOST     = mqtt_server;
+  #ifdef mqtt_username
+    const char* MQTT_USER   = mqtt_username;
+  #else
+    const char* MQTT_USER   = nullptr;
+  #endif
+  #ifdef mqtt_password
+    const char* MQTT_PASS   = mqtt_password;
+  #else
+    const char* MQTT_PASS   = nullptr;
+  #endif
+#else
+  const char* WIFI_SSID     = "YOUR_SSID";
+  const char* WIFI_PASS     = "YOUR_PASS";
+  const char* MQTT_HOST     = "192.168.1.10";
+  const char* MQTT_USER     = nullptr;
+  const char* MQTT_PASS     = nullptr;
+#endif
 const uint16_t MQTT_PORT  = 1883;
-#ifdef mqtt_username
-const char* MQTT_USER     = mqtt_username;
-#else
-const char* MQTT_USER     = nullptr;
-#endif
-#ifdef mqtt_password
-const char* MQTT_PASS     = mqtt_password;
-#else
-const char* MQTT_PASS     = nullptr;
-#endif
 String DEVICE_ID = String("esp32-50hz-") + String((uint32_t)ESP.getEfuseMac(), HEX);
 String TOPIC_BASE = "grid/50hzmeter/" + DEVICE_ID + "/";
 
